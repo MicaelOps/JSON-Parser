@@ -5,3 +5,5 @@ Don't recommend using it, but I will strive to make it as fast as my current neg
 
 
 I will certaintly rewrite this as many times i feel like until I am satisfied.
+
+Current rewrite count: 2
