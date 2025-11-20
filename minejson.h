@@ -75,7 +75,9 @@ public:
             delete item;
         }
     }
-
+    std::vector<json_node*>::size_type size() const {
+        return data.size();
+    }
     void addValue(json_node* value) {
         data.emplace_back(value);
     }
@@ -102,6 +104,10 @@ public:
         for (const auto &item: data) {
             delete item.second;
         }
+    }
+
+    std::unordered_map<std::string, json_node*>::size_type size() const {
+        return data.size();
     }
     void insertKeyValue(const std::string& key, json_node* value) {
         data[key] = value;
