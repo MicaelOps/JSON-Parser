@@ -1,10 +1,10 @@
 # JSON-Parser
 JSON Parser created for the minecraft-gameserver project
 
-Don't recommend using it, but I will strive to make it as fast as my current negligible experience and knowledge allows.
+Since I don't instend to spread the project I woont show how to use it but the minecraft-gameserver project will. 
 
-
-I will certaintly rewrite this as many times i feel like until I am satisfied.
+I will strive to make it as fast as my current negligible experience and knowledge allows.
+I will certaintly rewrite this as many times i feel like until I am satisfied. There will probably be a new version every 3-month cycle or less depending on my time and motivation.
 
 Current rewrite count: 0 
 
