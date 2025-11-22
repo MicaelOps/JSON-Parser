@@ -40,10 +40,10 @@ public:
     ~json_string() override = default;
 
 
-    JSON_NODE_TYPE getType() const override  {
+    [[nodiscard]] JSON_NODE_TYPE getType() const override  {
         return JSON_NODE_TYPE::JSON_STRING;
     }
-    std::string toString()  const override {
+    [[nodiscard]] std::string toString()  const override {
         return "[]";
     }
 };
@@ -53,11 +53,11 @@ public:
 
     ~json_int() override = default;
 
-    JSON_NODE_TYPE getType() const override  {
+    [[nodiscard]] JSON_NODE_TYPE getType() const override  {
         return JSON_NODE_TYPE::JSON_NUMBER;
     }
 
-    std::string toString() const override {
+    [[nodiscard]] std::string toString() const override {
         return "[]";
     }
 };
@@ -75,17 +75,17 @@ public:
             delete item;
         }
     }
-    std::vector<json_node*>::size_type size() const {
+    [[nodiscard]] std::vector<json_node*>::size_type size() const {
         return data.size();
     }
     void addValue(json_node* value) {
         data.emplace_back(value);
     }
-    JSON_NODE_TYPE getType() const override  {
+    [[nodiscard]] JSON_NODE_TYPE getType() const override  {
         return JSON_NODE_TYPE::JSON_ARRAY;
     }
 
-    std::string toString() const  override {
+    [[nodiscard]] std::string toString() const  override {
         return "[]";
     }
 };

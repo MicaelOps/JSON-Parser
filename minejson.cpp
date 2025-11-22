@@ -5,48 +5,103 @@
 #include "minejson.h"
 #include <stack>
 #include <iostream>
+#include <sstream>
 
 
-constexpr short int ERROR_VALUE = -1;
+constexpr std::string_view::size_type ERROR_VALUE = std::string_view::npos;
 
-int readJsonObject(const std::string_view& stringView, int pos) {
 
-    return pos + 1;
-}
-int proccessKeyValue(json_object* jsonObject, std::string_view stringView, int pos) {
+std::string_view::size_type getKeyName(const std::string_view& stringView, std::string_view::size_type pos, std::string& out) {
+
     std::string_view::size_type quotationBeginPos = stringView.find_first_of('"', pos);
-    stringView+=quotationBeginPos;
-    std::string_view::size_type quotationEndPos =.find_first_of('"', stringView.length());
 
-    if(quotationBeginPos == std::string_view::npos ||  quotationEndPos == std::string_view::npos) {
-        std::cout << "Unable to find quotation mark for JSON Document \n";
+    if(quotationBeginPos == std::string_view::npos) {
+        std::cout << "Unable to find fist quotation mark for JSON Document \n";
         std::cout << quotationBeginPos;
         std::cout << "\n";
-        std::cout << quotationEndPos;
-        return nullptr;
+        return -1;
     }
 
-    std::string_view elementName = stringView.substr(quotationBeginPos, quotationEndPos);
-    std::cout << "Captured element name : " << elementName << "\n";
-    return ERROR_VALUE;
+    std::string_view::size_type quotationEndPos = quotationBeginPos + 1;
+    std::ostringstream name;
+
+    while(quotationEndPos < stringView.size()) {
+
+        if(stringView[quotationEndPos] == '\\') {
+            // Skip the backslash and the next character
+            quotationEndPos += 2;
+            continue;
+        }
+        if(stringView[quotationEndPos] == '"') {
+            break;  // Found actual end
+        }
+
+        name << stringView[quotationEndPos];
+        quotationEndPos++;
+    }
+
+
+    // The only reason this would be true is if the while loop stop due to quotationEndPos reaching the same length as the json string.
+    if(quotationEndPos >= stringView.size())
+        return ERROR_VALUE;
+
+
+    out = name.str();
+    std::cout << "Captured element name : " << out << "\n";
+    return quotationEndPos;
 }
 
-int startObjectProccessing(json_object* root , std::string_view& stringView, int pos) {
+// Pretty much just checking if there is a ':'
+std::string_view::size_type hasValueSignate(std::string_view& stringView, std::string_view::size_type pos) {
+    return stringView.find(':', pos);
+}
+
+std::string_view::size_type getValue(const json_object* root, json_node* out, std::string_view& stringView, std::string_view::size_type pos ) {
+    pos = stringView.find_first_not_of(' ', pos);
+
+    if(pos == ERROR_VALUE)
+        return ERROR_VALUE;
+
+    out
+    return pos;
+}
+std::string_view::size_type startObjectProccessing(json_object* root , std::string_view& stringView, std::string_view::size_type pos) {
 
     // while loop to dodge spaces and get to : ?
 
     while (stringView.length() > pos && stringView[pos] != '}') {
 
-        if(stringView[pos] == ' ') {
-            pos++;
-            continue;
+
+        std::string name;
+        pos = getKeyName(stringView, pos, name);
+
+        // did an error happening while trying to process the key?
+        if(pos == ERROR_VALUE) {
+            std::cout << "Unable to find end quotation mark for JSON Document \n";
+            break;
         }
 
-        pos = proccessKeyValue(dynamic_cast<json_object*>(root), stringView, pos);
-
-        // did an error happening while trying to process the key-value pair?
-        if(pos == ERROR_VALUE)
+        if(!hasValueSignate(stringView, pos)) {
+            std::cout << "Unable to find : signature in JSON \n";
             break;
+        }
+
+        json_node* value = nullptr;
+        pos = getValue(root, value, stringView, pos);
+
+        if(pos == ERROR_VALUE || value == nullptr)
+            break;
+
+        std::string_view::size_type valueIndicator = stringView.find(':', pos);
+
+        if(valueIndicator == std::string_view::npos){
+            std::cout << "Unable to find : signature in JSON \n";
+            std::cout << valueIndicator;
+            break;
+        }
+        root->insertKeyValue(name, value);
+
+        pos++;
     }
 
     // we have to cleanse memory if something went wrong
@@ -59,19 +114,21 @@ int startObjectProccessing(json_object* root , std::string_view& stringView, int
     return stringView[pos] != ']' ? ERROR_VALUE: pos;
 }
 
-int startArrayProccessing(json_array* root , std::string_view& stringView, int pos) {
+
+std::string_view::size_type startArrayProccessing(json_array* root , std::string_view& stringView, std::string_view::size_type pos) {
 
 
     while (stringView.length() > pos && stringView[pos] != ']') {
 
-        if(stringView[pos] == ' ') {
-            pos++;
-            continue;
-        }
+        pos = stringView.find_first_not_of(' ', pos);
+
+        if(pos == ERROR_VALUE)
+            break;
 
         if(stringView[pos] == '{') {
             auto* new_object_root = new json_object();
             pos = startObjectProccessing(dynamic_cast<json_object*>(new_object_root), stringView, pos+1);
+
 
             // did an error happening while trying to process the object?
             if(pos == ERROR_VALUE)
@@ -119,13 +176,14 @@ int startArrayProccessing(json_array* root , std::string_view& stringView, int p
 
 }
 
+
 json_node* readJsonString(std::string_view stringView) {
 
 
     if(stringView.empty() || stringView.length() < 2)
         return nullptr;
 
-    int pos = 0;
+    std::string_view::size_type pos = 0;
 
     json_node* root = nullptr;
 
@@ -135,7 +193,7 @@ json_node* readJsonString(std::string_view stringView) {
 
     } else if(stringView[pos] == '[') {
         root = new json_array();
-        pos = startArrayProccessing(dynamic_cast<json_array *>(root), stringView, pos + 2);
+        pos = startArrayProccessing(dynamic_cast<json_array *>(root), stringView, pos + 1);
     }
 
     if(pos == ERROR_VALUE)
