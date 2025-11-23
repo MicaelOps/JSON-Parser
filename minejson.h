@@ -36,7 +36,14 @@ public:
 
 class json_string : public json_node {
 
+private:
+    std::string value;
+
 public:
+    json_string(std::string basicString) {
+
+    }
+
     ~json_string() override = default;
 
 
@@ -48,10 +55,10 @@ public:
     }
 };
 
-class json_int : public json_node {
+class json_number : public json_node {
 public:
 
-    ~json_int() override = default;
+    ~json_number() override = default;
 
     [[nodiscard]] JSON_NODE_TYPE getType() const override  {
         return JSON_NODE_TYPE::JSON_NUMBER;
@@ -138,5 +145,6 @@ public:
 json_node* readJsonString(std::string_view jsonString);
 std::string_view toJsonString(json_node* jsonNode);
 
+std::string_view::size_type valueIdentification(std::string_view text, std::string_view::size_type pos, json_node*& out);
 
 #endif //MINECRAFTSERVER_JSON_READER_H
