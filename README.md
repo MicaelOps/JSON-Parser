@@ -15,6 +15,7 @@ Logs: (afterthoughts, rants, etc..)
 - I may have to make a sacrifice in the precision of numbers.
 - I feel like just slapping the json_numbers with a internal string called "original_data" to let programmers calculate their floating points with the precision they like. Of course, I would just implement a basic one...
 - I think I will just implement a functionality for integers and will only move further if the minecraft project requires floating points to be used in JSON.
+  
 22/11/2025
 - I am trying to not make a linear check of every character and instead use string.find() + string.find_first_of() + string.first_first_not_of() to navigate through the JSON but its not perfect.
 - For JSON Strings like "{'name': 233}", it would work perfectly. Otherwise, json strings like  "////{///"name":  123123///}" would not shine. Maybe a few more tinkering and would be fine but alas I CBA
