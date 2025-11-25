@@ -27,8 +27,8 @@ public:
 
     virtual ~json_node() = default;
 
-    virtual std::string toString() const = 0;
-    virtual JSON_NODE_TYPE getType() const {
+    [[nodiscard]] virtual std::string toString() const = 0;
+    [[nodiscard]] virtual JSON_NODE_TYPE getType() const {
         return JSON_NODE_TYPE::JSON_INVALID;
     }
 };
@@ -50,21 +50,37 @@ public:
         return JSON_NODE_TYPE::JSON_STRING;
     }
     [[nodiscard]] std::string toString()  const override {
-        return value;
+        return "\"" + value + "\"";
     }
 };
 
 class json_number : public json_node {
+
+private:
+    std::string originalValue;
+    long long number;
+
 public:
 
+    explicit json_number(long long number, std::string originalValue) : originalValue(std::move(originalValue)) , number(number) {}
     ~json_number() override = default;
 
     [[nodiscard]] JSON_NODE_TYPE getType() const override  {
         return JSON_NODE_TYPE::JSON_NUMBER;
     }
 
+    [[nodiscard]] unsigned long long getNumber() const{
+        return number;
+    }
+
+    [[nodiscard]] double convertToDecimal() const {
+        // blalablala convert the originalValue to decimal
+        // i cba to do this
+        return 0.0;
+    }
+
     [[nodiscard]] std::string toString() const override {
-        return "[]";
+        return originalValue;
     }
 };
 
@@ -92,7 +108,12 @@ public:
     }
 
     [[nodiscard]] std::string toString() const  override {
-        return "[]";
+        std::string text("[");
+        for (auto &item: data) {
+            text+=item->toString();
+        }
+        text+=']';
+        return text;
     }
 };
 
@@ -123,26 +144,23 @@ public:
         return data.find(key) != data.end();
     }
 
-    json_node* retrieveValue(const std::string& key) {
-
-        if(!existsValue(key))
-            return nullptr;
-
-        return data[key];
-    }
-
     JSON_NODE_TYPE getType() const override  {
         return JSON_NODE_TYPE::JSON_OBJECT;
     }
 
 
     std::string toString() const  override {
-        return "[]";
+        std::string text("{");
+        for (auto &item: data) {
+            text+="\"" + item.first + "\" : ";
+            text+=item.second->toString();
+        }
+        text+='}';
+        return text;
     }
 };
 
 json_node* readJsonString(std::string_view jsonString);
-std::string_view toJsonString(json_node* jsonNode);
 
 std::string_view::size_type valueIdentification(std::string_view text, std::string_view::size_type pos, json_node*& out);
 

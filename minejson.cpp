@@ -4,48 +4,40 @@
 
 #include "minejson.h"
 #include <stack>
-#include <iostream>
-#include <sstream>
-
+#include <limits>
 
 constexpr std::string_view::size_type ERROR_VALUE = std::string_view::npos;
 
-
 std::string_view::size_type getKeyName(const std::string_view stringView, std::string_view::size_type pos, std::string& out) {
 
-    if(stringView[pos] != '"') {
-        std::cout << "Unable to find fist quotation mark for JSON Document \n";
-        std::cout << pos;
-        std::cout << "\n";
+    if(stringView[pos] != '"')
         return ERROR_VALUE;
-    }
+
 
     std::string_view::size_type quotationEndPos = pos + 1;
-    std::ostringstream name;
+    std::string name;
 
     while(quotationEndPos < stringView.size()) {
 
         if(stringView[quotationEndPos] == '\\') {
-            // Skip the backslash and the next character
             quotationEndPos += 2;
             continue;
         }
-        if(stringView[quotationEndPos] == '"') {
-            break;  // Found actual end
-        }
 
-        name << stringView[quotationEndPos];
+        if(stringView[quotationEndPos] == '"')
+            break;
+
+        name += stringView[quotationEndPos];
         quotationEndPos++;
     }
 
-
     // The only reason this would be true is if the while loop stop due to quotationEndPos reaching the same length as the json string.
-    if(quotationEndPos >= stringView.size()) {
+    if(quotationEndPos >= stringView.size())
         return ERROR_VALUE;
-    }
 
 
-    out = name.str();
+    out = std::move(name);
+
     return quotationEndPos;
 }
 
@@ -100,29 +92,26 @@ std::string_view::size_type startObjectProccessing(json_object* root , std::stri
         pos = getKeyName(stringView, pos, name);
 
         // did an error happening while trying to process the key?
-        if(pos == ERROR_VALUE) {
-            std::cout << "Unable to find end quotation mark for JSON Object key \n";
+        if(pos == ERROR_VALUE)
             goto error;
-        }
+
 
         // checks if ':' exists and returns the position of the : char
         pos = hasValueSignate(stringView, pos + 1);
-        if(pos == ERROR_VALUE) {
-            std::cout << "Unable to find : signature in JSON\n";
+
+        if(pos == ERROR_VALUE)
             goto error;
-        }
+
 
         json_node* value = nullptr;
 
         // skip the whitespace after, returns the position of the character after the value identified
         pos = valueIdentification(stringView, stringView.find_first_not_of(" \t\n\r", pos+1), value);
 
-        if(pos == ERROR_VALUE || value == nullptr) {
-            std::cout << "Unable to proccess JSON Value \n";
+        if(pos == ERROR_VALUE || value == nullptr)
             goto error;
-        }
 
-        std::cout << "key  " << name << " and value " << value->toString() << " added. starting at " << stringView[pos] << " next \n";
+
         root->insertKeyValue(name, value);
     }
 
@@ -199,8 +188,66 @@ std::string_view::size_type valueIdentification(std::string_view stringView, std
             out = new json_string(stringvalue);
         }
 
-    } else if(isdigit(stringView[pos])) {
+    } else if(isdigit(stringView[pos]) || stringView[pos] == '-') {
 
+        std::string originalValue;
+        long long number = 0;
+        bool decimal = false , negative = false;
+
+        if(stringView[pos] == '-') {
+            negative = true;
+            originalValue+=stringView[pos];
+            pos+=1;
+        }
+
+        for(; pos < stringView.length() ; pos++) {
+
+            if(stringView[pos] == '.') {
+                if(decimal)
+                    return ERROR_VALUE; // why is there two '.' ?
+
+                decimal = true; // i cba to process decimal values, maybe some other time when im feeling challenged.
+                originalValue+=stringView[pos];
+
+            } else if(isdigit(stringView[pos]) ) {
+                originalValue+=stringView[pos];
+                if(!decimal) {
+
+                    long long max_val = std::numeric_limits<long long>::max();
+
+                    // Check if number*10 would overflow
+                    if(number > max_val / 10) {
+                        // Overflow will occur
+                        return ERROR_VALUE;
+                    }
+
+                    number *= 10;
+
+                    long long digit = stringView[pos] - '0';
+
+                    // Check if adding digit would overflow
+                    if(number > max_val - digit) {
+                        // Overflow will occur
+                        return ERROR_VALUE;
+                    }
+
+                    number += digit;
+                }
+            } else {
+                // idk what this character can be, I will let the startObjectProccessing or startArrayProccessing discover
+                pos-=1;
+                break;
+            }
+        }
+
+        if(originalValue == "-")
+            return ERROR_VALUE;
+
+        if(negative)
+            number*=-1;
+
+
+        out = new json_number(number, originalValue);
     } else
         return ERROR_VALUE;
 
@@ -221,10 +268,8 @@ json_node* readJsonString(std::string_view stringView) {
 
     pos = valueIdentification(stringView, pos, root);
 
-    if(pos == ERROR_VALUE || root == nullptr) {
-        std::cout << "Unable to read JSON \n";
+    if(pos == ERROR_VALUE || root == nullptr)
         return nullptr;
-    }
 
 
     return root;
