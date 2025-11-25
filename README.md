@@ -10,6 +10,11 @@ Current rewrite count: 0
 
 Logs: (afterthoughts, rants, etc..)
 
+25/11/2025 pt2
+- Ok I finished the beta version of the JSON Parser.
+- It is a bit ugly as it was a first time but I am sure I will rewrite soon because I will see drastic perfomance drops on my minecraft-server project and will not be able to cope with it.
+- I will also read some json parsers in c++ to gain inspiration and to understand why they did the way they did.
+
 25/11/2025
 - I can't lie, parsing numbers in JSON is reminding me of that one Easy LeetCode problem. However in this case it is not just integers but also decimal numbers, floating points, etc... which make this 100x harder
 - I may have to make a sacrifice in the precision of numbers.
