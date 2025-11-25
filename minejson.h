@@ -7,6 +7,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <utility>
 #include <vector>
 
 
@@ -40,9 +41,7 @@ private:
     std::string value;
 
 public:
-    json_string(std::string basicString) {
-
-    }
+    explicit json_string(std::string basicString) : value(std::move(basicString)) {}
 
     ~json_string() override = default;
 
@@ -51,7 +50,7 @@ public:
         return JSON_NODE_TYPE::JSON_STRING;
     }
     [[nodiscard]] std::string toString()  const override {
-        return "[]";
+        return value;
     }
 };
 
